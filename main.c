@@ -8,7 +8,7 @@
 ;CREADO: 22/04/2024
 */
 
-#define F_CPU 16000000
+#define F_CPU 16000000UL
 
 #include <avr/io.h>
 #include <avr/interrupt.h>
@@ -18,7 +18,7 @@ void initUART9600(void);
 void initADC(void);
 void initT1(void);
 
-uint16_t mapped(uint16_t);
+
 
 uint8_t mode = 0;
 
@@ -61,9 +61,9 @@ int main(void)
 				//
 				//
 		//}
-			//_delay_us(10);
+			_delay_us(1000);
 			OCR1A = Ser0_LR_LeftEye;
-			_delay_ms(0);	
+			OCR1B = Ser1_UD_LeftEye;
 			ADCSRA |= (1<<ADSC);
 											
     }
@@ -109,22 +109,18 @@ void initT1(void){
 
 ISR(ADC_vect){ //ADC completion ISR
 	
-	//switch(ADMUX&0x07){
-		//case 0: Ser0_LR_LeftEye=mapped(ADC);	break;
-		//case 1: Ser1_UD_LeftEye=mapped(ADC);	break;
-		//case 2:	Ser2_LR_RightEye=mapped(ADC);	break;
-		//case 3: Ser3_UD_RightEye=mapped(ADC);	break;
-		//case 4: Ser4_L_Eyebrow=mapped(ADC);		break;
-		//case 5: Ser5_R_Eyebrow=mapped(ADC);		break;
-	//}
-//
-	//if((ADMUX & 0b00000111)==5){
-		//ADMUX &= 0b11111000;
-	//}
-	//else{ADMUX++;}
+	switch(ADMUX&0x07){
+		case 0: Ser0_LR_LeftEye = 1000 + ADCH *(15.6862745);	break;
+		case 1: Ser1_UD_LeftEye = 1000 + ADCH *(15.6862745);	break;
+		case 2:	Ser2_LR_RightEye= 1000 + ADCH *(15.6862745);	break;
+		case 3: Ser3_UD_RightEye= 1000 + ADCH *(15.6862745);	break;
+		case 4: Ser4_L_Eyebrow  = 1000 + ADCH *(15.6862745);	break;
+		case 5: Ser5_R_Eyebrow  = 1000 + ADCH *(15.6862745);	break;
+	}
 
-//	OCR1A = mapped(ADC);
-	Ser0_LR_LeftEye = 1999 + ADCH *(125/16);
+	if((ADMUX & 0b00000111)==5){ADMUX &= 0b11111000;}
+	else{ADMUX++;}
+
 	ADCSRA |= (1<<ADIF); //Clear interrupt flag.
 
 }
